@@ -37,6 +37,7 @@ class IndustriResource extends Resource
                     ->relationship('guru', 'nama')
                     ->required()
                     ->label('Guru Pembimbing'),
+                TextInput::make('website')->required(),
             ]);
 
     }

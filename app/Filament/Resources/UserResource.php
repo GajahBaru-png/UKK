@@ -44,7 +44,7 @@ class UserResource extends Resource
 
             Select::make('roles')
                 ->label('Role')
-                ->options(Role::all()->pluck('name', 'name'))
+                
                 ->multiple()
                 ->preload()
                 ->searchable()
