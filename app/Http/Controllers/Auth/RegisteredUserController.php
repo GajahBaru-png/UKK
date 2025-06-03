@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\Guru;
+use App\Models\Siswa;
 
 class RegisteredUserController extends Controller
 {
@@ -36,11 +38,28 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        $isSiswa = siswa::where('email', $request->email)->exists();
+        $isGuru = guru::where('email', $request->email)->exists();
+
+        if (!$isSiswa && !$isGuru) {
+            return back()->withErrors([
+                'email' => 'Email tidak ditemukan di daftar siswa atau guru.',
+            ])->withInput();
+        }
+
+        // Buat user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        // Beri role sesuai asal data
+        if ($isSiswa) {
+            $user->assignRole('siswa');
+        } elseif ($isGuru) {
+            $user->assignRole('guru');
+        }
 
         event(new Registered($user));
 

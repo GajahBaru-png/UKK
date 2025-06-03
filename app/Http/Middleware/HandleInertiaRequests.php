@@ -6,6 +6,7 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
+use Illuminate\Support\Facades\Session;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -37,20 +38,28 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
-
-        return [
-            ...parent::share($request),
-            'name' => config('app.name'),
-            'quote' => ['message' => trim($message), 'author' => trim($author)],
+        return array_merge(parent::share($request), [
+            // Data auth, ziggy, dll.
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user() ? [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    // tambahkan role jika perlu, misal:
+                    // 'role' => $request->user()->getRoleNames()->first()
+                ] : null,
             ],
-            'ziggy' => fn (): array => [
-                ...(new Ziggy)->toArray(),
-                'location' => $request->url(),
+            // Ini bagian KRUSIAL untuk flash messages
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error'   => fn () => $request->session()->get('error'),
+                // Anda bisa menambahkan key flash lain jika ada (e.g., warning, info)
+                // 'warning' => fn () => $request->session()->get('warning'),
             ],
-            'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-        ];
+            // Pastikan Anda juga menyertakan 'errors' untuk validasi
+            'errors' => fn () => Session::get('errors')
+                ? Session::get('errors')->getBag('default')->getMessages()
+                : (object) [],
+        ]);
     }
 }

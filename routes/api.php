@@ -14,4 +14,10 @@ Route::get('/user', function (Request $request) {
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('siswa', SiswaController::class);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+
 });
+
+
+
+
